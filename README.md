@@ -15,6 +15,8 @@ Usage:
 #include GameKeybindAutoLib.ahk
 
 ; the function argument for isGameActive should be any substring from the process name of your desired game
+; for instance if your process name is FarCry.exe you can put "FarCry" as argument
+; you can inspect the process name in taskmanager on details section or the name of executable
 #HotIf isGameActive("FarCry")
 ; === your custom keymaps ===
 q::Autowalk("w") ; example for autowalk using q for normal wasd
