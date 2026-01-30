@@ -18,9 +18,11 @@ Usage:
 #HotIf isGameActive("FarCry")
 ; === your custom keymaps ===
 q::Autowalk("w") ; example for autowalk using q for normal wasd
+e::AssignLongPress("e", "e", "y")
 ```
 
 5. Use the functions on GameKeybindAutoLib to write your custom script
-6. Double-Click on your script to activate 
+6. Double-Click on your script to activate
+7. Start your game and make sure the keymap in game settings is consistent with your script. For instance, you should assign functionality for e and y for the longpress functionality. 
 
 Avoid remapping everything, use the script to assign functionality to keys which you can't achieve in game options interface, for example: longpress input, autowalk, key toggle.  
