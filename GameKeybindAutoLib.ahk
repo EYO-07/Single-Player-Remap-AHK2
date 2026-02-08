@@ -15,6 +15,21 @@ longPressTime := 500  ; milliseconds
 ; z::Send("{WheelUp}")
 ; x::Send("{WheelDown}")
 
+; isGameActive(name_exe) - True if the game window is active
+; To be used on #HotIf statement 
+; isGameActive(name_exe) {
+	; return WinActive("ahk_exe " name_exe) 
+; }
+
+isGameActive(namePart) {
+    hwnd := WinActive("A")
+    if !hwnd
+        return false
+
+    proc := WinGetProcessName(hwnd)
+    return InStr(proc, namePart, true) ; case-insensitive
+}
+
 ; Autowalk - Simple autopress, the triggering key must be different from the autopressing key. 
 ; Example to configure q as a autopress w: 
 ;
@@ -30,6 +45,12 @@ Autowalk(key) {
 DoubleTap(key) {
 	Send("{" key "}")
 	Sleep 100 
+	Send("{" key "}")
+}
+
+DoubleTapAlt(key, delay) {
+	Send("{" key "}")
+	Sleep delay 
 	Send("{" key "}")
 }
 
@@ -109,18 +130,55 @@ AssignLongPress_Action(key, normal_action, longpress_action) {
     }
 }
 
-; isGameActive(name_exe) - True if the game window is active
-; To be used on #HotIf statement 
-; isGameActive(name_exe) {
-	; return WinActive("ahk_exe " name_exe) 
-; }
-
-isGameActive(namePart) {
-    hwnd := WinActive("A")
-    if !hwnd
-        return false
-
-    proc := WinGetProcessName(hwnd)
-    return InStr(proc, namePart, true) ; case-insensitive
+; MouseGesture - Press key and flick the mouse toward cardinal directions on quarter second to trigger a commands  
+; Example - Gesture with shift pressed 
+; 
+; func1(value) { MsgBox value }
+; ~Shift::MouseGesture("Shift", func1)
+EuclideanDist(x1, y1, x2, y2) {
+    dx := x2 - x1
+    dy := y2 - y1
+    return Sqrt(dx*dx + dy*dy)
 }
+react_time := 250
+MouseGesture(key, callback) {
+	global react_time
+    CoordMode "Mouse", "Screen"
+
+    startTime := A_TickCount
+    MouseGetPos &x0, &y0
+
+    while GetKeyState(key, "P") {
+        if (A_TickCount - startTime > react_time)
+            break
+
+        MouseGetPos &x, &y
+        if (EuclideanDist(x0, y0, x, y) > 200) {
+            dx := x - x0
+            dy := y - y0
+			if ( Abs(dx) > Abs(dy) ) {
+				if ( dx>0 ) {
+					callback("right")
+				} else {
+					callback("left")
+				}
+			} else {
+				if (dy > 0) {
+					callback("down")
+				} else {
+					callback("up")
+				}
+			}
+            break
+        }
+
+        Sleep Floor(react_time / 10)
+    }
+
+    KeyWait key
+}
+
+
+
+
 
