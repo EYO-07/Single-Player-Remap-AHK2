@@ -141,8 +141,9 @@ EuclideanDist(x1, y1, x2, y2) {
     return Sqrt(dx*dx + dy*dy)
 }
 react_time := 250
+react_dist := 200 
 MouseGesture(key, callback) {
-	global react_time
+	global react_time, react_dist
     CoordMode "Mouse", "Screen"
 
     startTime := A_TickCount
@@ -153,7 +154,7 @@ MouseGesture(key, callback) {
             break
 
         MouseGetPos &x, &y
-        if (EuclideanDist(x0, y0, x, y) > 200) {
+        if (EuclideanDist(x0, y0, x, y) > react_dist) {
             dx := x - x0
             dy := y - y0
 			if ( Abs(dx) > Abs(dy) ) {
@@ -176,8 +177,46 @@ MouseGesture(key, callback) {
     }
 
     KeyWait key
+	callback("none")
 }
 
+MouseGesturePlus(key, callback, react_time, react_dist) {
+    CoordMode "Mouse", "Screen"
+
+    startTime := A_TickCount
+    MouseGetPos &x0, &y0
+
+    while GetKeyState(key, "P") {
+        if (A_TickCount - startTime > react_time)
+            break
+
+        MouseGetPos &x, &y
+		dist := EuclideanDist(x0, y0, x, y)
+        if (dist > react_dist) {
+            dx := x - x0
+            dy := y - y0
+			if ( Abs(dx) > Abs(dy) ) {
+				if ( dx>0 ) {
+					callback("right", dist)
+				} else {
+					callback("left", dist)
+				}
+			} else {
+				if (dy > 0) {
+					callback("down", dist)
+				} else {
+					callback("up", dist)
+				}
+			}
+            break
+        }
+
+        Sleep Floor(react_time / 10)
+    }
+
+    KeyWait key
+	callback("none", dist)
+}
 
 
 
