@@ -12,16 +12,16 @@ move_down := false
 move_left := false
 move_right := false
 
-PrintScreen:: {
+Numpad7:: {
     global b_mouse_control_active
     b_mouse_control_active := !b_mouse_control_active
 }
 
-ScrollLock:: {
+Numpad8:: {
 	global move_step
 	if move_step = 5 
-		move_step := 25
-	else if move_step = 25 
+		move_step := 20
+	else if move_step = 20 
 		move_step := 5
 }
 
@@ -29,39 +29,39 @@ ScrollLock:: {
 ; Key Down
 ; =========================
 
-Home::  {
+Numpad5::  {
 	global b_mouse_control_active
 	if b_mouse_control_active {
 		SetMove("up", true)
 	} else {
-		Send("{Home}")
+		Send("{Numpad5}")
 	}
 } 
 
-End::   {
+Numpad2::   {
 	global b_mouse_control_active
 	if b_mouse_control_active {
 		SetMove("down", true)
 	} else {
-		Send("{End}")
+		Send("{Numpad2}")
 	}
 }
 
-Delete::{
+Numpad1::{
 	global b_mouse_control_active
 	if b_mouse_control_active {
 		SetMove("left", true)
 	} else {
-		Send("{Delete}")
+		Send("{Numpad1}")
 	}
 }
 
-PgDn::  {
+Numpad3::  {
 	global b_mouse_control_active
 	if b_mouse_control_active {
 		SetMove("right", true)
 	} else {
-		Send("{PgDn}")
+		Send("{Numpad3}")
 	}
 }
 
@@ -69,10 +69,10 @@ PgDn::  {
 ; Key Up
 ; =========================
 
-Home Up::   SetMove("up", false)
-End Up::    SetMove("down", false)
-Delete Up:: SetMove("left", false)
-PgDn Up::   SetMove("right", false)
+Numpad5 Up::   SetMove("up", false)
+Numpad2 Up::    SetMove("down", false)
+Numpad1 Up:: SetMove("left", false)
+Numpad3 Up::   SetMove("right", false)
 
 ; =========================
 ; Movement Control
@@ -131,10 +131,10 @@ MoveMouse() {
 ; =========================
 
 #HotIf (b_mouse_control_active) 
-Insert::LButton
-PgUp::RButton 
-RCtrl::Send("{WheelDown}")
-RShift::Send("{WheelUp}")
+Numpad4::LButton
+Numpad6::RButton 
+Numpad0::Send("{WheelDown}")
+NumpadEnter::Send("{WheelUp}")
 
 
 
