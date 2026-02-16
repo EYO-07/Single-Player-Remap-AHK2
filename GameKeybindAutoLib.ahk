@@ -3,6 +3,7 @@
 ; Not every function works on some games 
 
 ; global variables 
+
 longPressTime := 500  ; milliseconds
 
 ; Examples - Vanilla AHK
@@ -34,6 +35,7 @@ isGameActive(namePart) {
 ; Example to configure q as a autopress w: 
 ;
 ; q::Autowalk("w") 
+
 Autowalk(key) {
 	SendInput "{" key " down}"
 }
@@ -42,6 +44,7 @@ Autowalk(key) {
 ; Example to emulate double click with tab 
 ; 
 ; Tab::DoubleTap("LButton")
+
 DoubleTap(key) {
 	Send("{" key "}")
 	Sleep 100 
@@ -54,11 +57,20 @@ DoubleTapAlt(key, delay) {
 	Send("{" key "}")
 }
 
+; SendAlt - Some games don't understand the Send(key) command, this command send key down and after a delay sends a key up 
+
+SendAlt(key, delay) {
+	Send("{" key " down}")
+	Sleep(delay)
+	Send("{" key " up}")
+}
+
 ; KeyStateToggle - Toggle between key up and key down states 
 ; Example to set run toggle with shift. To this example works p must be the bind assigned to run in the game options, because the key up event will be send whenever shift is pressed, interfering with the logic.
 ; 
 ; RunToggle := [false, "p"] 
 ; LShift::KeyStateToggle(RunToggle)
+
 KeyStateToggle(arr_key) {
 	if (arr_key[1]) {
 		Send("{" arr_key[2] " up}")
@@ -73,6 +85,7 @@ KeyStateToggle(arr_key) {
 ;
 ; PrimaryWeaps := [1,"3","4","5"]
 ; g::ToggleKeys(PrimaryWeaps)
+
 ToggleKeys(arr_cycle) {
 	if (arr_cycle[1]+1 = arr_cycle.Length) {
 		arr_cycle[1] := 1
@@ -83,6 +96,7 @@ ToggleKeys(arr_cycle) {
 }
 
 ; ToggleKeysByGetters - Functional Version of ToggleKeys 
+
 ToggleKeysByGetters(state_getter,key1_getter,key2_getter) {
 	if (state_getter() = 1) {
 		Send( "{" key1_getter() "}" )
@@ -95,30 +109,33 @@ ToggleKeysByGetters(state_getter,key1_getter,key2_getter) {
 ; Example to assign distant keys for long press 
 ;
 ; q::AssignLongPress("q", "q", "y") 
-AssignLongPress(key, normal, longpress) {
+
+AssignLongPress(key, normal_key, longpress) {
 	start := A_TickCount 
     KeyWait key ; wait until released
     elapsed := A_TickCount - start
     if (elapsed >= longPressTime) {
         Send("{" longpress "}") ; long press action
     } else {
-        Send("{" normal "}") ; normal tap
+        Send("{" normal_key "}") ; normal tap
     }
 }
 
 ; AssignLongPress_SendInput - Same as AssignLongPress but using SendInput instead of Send. Some games don't recognize Send as keydown event. 
-AssignLongPress_SendInput(key, normal, longpress) {
+
+AssignLongPress_SendInput(key, normal_key, longpress) {
 	start := A_TickCount 
     KeyWait key ; wait until released
     elapsed := A_TickCount - start
     if (elapsed >= longPressTime) {
         SendInput "{" longpress "}" ; long press action
     } else {
-        SendInput "{" normal "}" ; normal tap
+        SendInput "{" normal_key "}" ; normal tap
     }
 }
 
 ; AssignLongPress_Action - Functional version of AssignLongPress with normal_action and longpress_action both functions.
+
 AssignLongPress_Action(key, normal_action, longpress_action) {
 	start := A_TickCount 
     KeyWait key ; wait until released
@@ -135,6 +152,7 @@ AssignLongPress_Action(key, normal_action, longpress_action) {
 ; 
 ; func1(value) { MsgBox value }
 ; ~Shift::MouseGesture("Shift", func1)
+
 EuclideanDist(x1, y1, x2, y2) {
     dx := x2 - x1
     dy := y2 - y1
@@ -217,6 +235,42 @@ MouseGesturePlus(key, callback, react_time, react_dist) {
     KeyWait key
 	callback("none", dist)
 }
+
+; MimicRadialMenu() - Mimic up,down,left, right option radial menu on long press or normal key 
+
+MimicRadialMenuLongPress(key, longPressTime, normal_key, up, down, left, right) {
+	CoordMode "Mouse", "Screen"
+	MouseGetPos &x0, &y0
+	start := A_TickCount 
+	
+    KeyWait key ; wait until released
+    elapsed := A_TickCount - start
+    if (elapsed >= longPressTime) {
+        MouseGetPos &x, &y	
+		dx := x - x0
+		dy := y - y0
+		if (EuclideanDist(x0, y0, x, y) > 20){ 
+			if ( Abs(dx) > Abs(dy) ) {
+				if ( dx>0 ) {
+					Send("{" right "}")
+				} else {
+					Send("{" left "}")
+				}
+			} else {
+				if (dy > 0) {
+					Send("{" down "}")
+				} else {
+					Send("{" up "}")
+				}
+			}
+		}
+    } else {
+        Send("{" normal_key "}") ; normal tap
+    }
+}
+
+
+
 
 
 
