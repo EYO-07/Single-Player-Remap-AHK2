@@ -6,8 +6,8 @@ Don't use on multiplayer games, as they can be considered cheat ;D
 
 Usage:
 1. Download and Install Autohotkeys V2 on https://www.autohotkey.com/ 
-2. Download the script `GameKeybindAutoLib.ahk`
-3. Create a new script `mygamekeybindscript.ahk` for your game in same folder of the script downloaded
+2. Download the script `GameKeybindAutoLib.ahk` 
+3. Create a new script `myGameKeyBindScript.ahk` for your game in same folder of the script downloaded (you can create an empty text file or use the context-menu option to create an empty script)
 4. Insert these lines on top:
 
 ```AutoHotkey
