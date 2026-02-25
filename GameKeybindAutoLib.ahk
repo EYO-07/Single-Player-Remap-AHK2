@@ -40,9 +40,15 @@ isScriptActive() {
 
 ; ToggleScript - toggle the variable returned by isScriptActive 
 
+
 ToggleScript() {
-	global _is_main_hotkeys_active
+	global _is_main_hotkeys_active 
 	_is_main_hotkeys_active := !_is_main_hotkeys_active 
+	if ( _is_main_hotkeys_active ) {
+		DisplayMessage("Script Active")
+	} else {
+		DisplayMessage("Script Inactive")
+	}
 }
 
 ; Autowalk - Simple autopress, the triggering key must be different from the autopressing key. 
@@ -99,7 +105,7 @@ KeyStateToggle(bind_key) {
 
 ; ToggleKeys - Toggle between binds with same key 
 ; Example Cycling between 3,4,5, the first entry is to store the current index
-;
+
 ; PrimaryWeaps := [1,"3","4","5"]
 ; g::ToggleKeys(PrimaryWeaps)
 
@@ -155,8 +161,8 @@ ToggleActions(name, action_1, action_2) {
 }
 
 ; AssignLongPress - Assign two keybinds in one, short tap will send one key, a long press will send another.
+
 ; Example to assign distant keys for long press 
-;
 ; q::AssignLongPress("q", "q", "y") 
 
 AssignLongPress(key, normal_key, longpress) {
@@ -212,7 +218,7 @@ ScrollUp() {
 	Send("{WheelUp}")
 }
 
-; Radial Menu 
+; -- Graphical User Interface 
 
 CoordMode("Mouse", "Screen")
 CoordMode("ToolTip", "Screen")
@@ -277,7 +283,7 @@ RadialMenu4d(key, actions, names) {
     radialGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
     radialGui.BackColor := "001a00"
     WinSetTransparent(175, radialGui)
-    radialGui.SetFont("s25 cWhite", "Segoe UI")	
+    radialGui.SetFont("s25 c00ff99", "Consolas")	
 	textHeight := 40
 	radialGui.AddText(
 		"+Center x0 y" (wh//2 - textHeight//2)
@@ -318,6 +324,68 @@ RadialMenu4d(key, actions, names) {
     radialSelection := ""
 	accDX := 0
 	accDY := 0
+}
+
+DisplayMessage(text, seconds := 2) {
+    static msgGui := 0
+    static fadeTimer := 0
+    static currentAlpha := 0
+
+    ; Destroy previous message if exists
+    if msgGui {
+        if (fadeTimer)
+            SetTimer(fadeTimer, 0)
+        msgGui.Destroy()
+        msgGui := 0
+    }
+
+    ; Create GUI
+    msgGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
+    msgGui.BackColor := "001a00"
+    msgGui.MarginX := 20
+    msgGui.MarginY := 15
+    msgGui.SetFont("s18 c00ff99", "Consolas")
+
+    txt := msgGui.AddText("vMsgText", text)
+
+    ; Show hidden first to calculate real size
+    msgGui.Show("Hide AutoSize")
+
+    ; Get text control size
+    txt.GetPos(&tx, &ty, &tw, &th)
+
+    ; Calculate final window size with margins
+    finalW := tw + (msgGui.MarginX * 2)
+    finalH := th + (msgGui.MarginY * 2)
+
+    ; Center on active window
+    WinGetPos(&wx, &wy, &ww, &wh, "A")
+    x := wx + (ww // 2) - (finalW // 2)
+    y := wy + (wh // 2) - (finalH // 2)
+
+    msgGui.Show("NA x" x " y" y " w" finalW " h" finalH)
+
+    currentAlpha := 175
+    WinSetTransparent(currentAlpha, msgGui)
+
+    ; Wait before fading
+    SetTimer(StartFade, -seconds * 1000)
+
+    StartFade() {
+        fadeTimer := FadeStep
+        SetTimer(fadeTimer, 30)
+    }
+
+    FadeStep() {
+        currentAlpha -= 5
+        if (currentAlpha <= 0) {
+            SetTimer(fadeTimer, 0)
+            msgGui.Destroy()
+            msgGui := 0
+            return
+        }
+        WinSetTransparent(currentAlpha, msgGui)
+    }
 }
 
 ; actions_T := Map(
