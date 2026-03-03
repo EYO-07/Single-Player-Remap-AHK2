@@ -1,4 +1,5 @@
-﻿#Requires AutoHotkey v2.0
+﻿
+#Requires AutoHotkey v2.0
 
 ; Autohotkeys Library to Control Input Behaviour for Gameplay 
 ; 1. Not every function works on some games, sometimes the alternate version works 
@@ -40,7 +41,6 @@ isScriptActive() {
 
 ; ToggleScript - toggle the variable returned by isScriptActive 
 
-
 ToggleScript() {
 	global _is_main_hotkeys_active 
 	_is_main_hotkeys_active := !_is_main_hotkeys_active 
@@ -56,7 +56,9 @@ ToggleScript() {
 ;
 ; q::Autowalk("w") 
 
+_autowalk_key := ""
 Autowalk(key) {
+	_autowalk_key := key
 	SendInput "{" key " down}"
 }
 
@@ -208,7 +210,97 @@ AssignLongPress_Action(key, normal_action, longpress_action) {
     }
 }
 
-; Mouse Keybinds 
+; ToggleKeySet, KeySetFilter ; Create a keyset toggle to create toggleable modes for keybinds
+_CurrentKeySet := 0
+ToggleKeySet(keyset_1, keyset_2) {
+	global _CurrentKeySet
+	if (_CurrentKeySet != keyset_1) {
+		_CurrentKeySet := keyset_1
+	} else {
+		_CurrentKeySet := keyset_2
+	}
+	DisplayMessage(_CurrentKeySet " active", 1)
+}
+KeySetFilter(keyset_1, action_1, args_1, keyset_2, action_2, args_2) {
+	global _CurrentKeySet
+	if ( _CurrentKeySet = keyset_1 ) {
+		action_1(args_1*)
+	} else if ( _CurrentKeySet = keyset_2 ) {
+		action_2(args_2*)
+	}
+}
+
+; StickPress ; Keep Pressing "keydown" when a key is pressed for enough time
+; _StickPressStates := Map()
+; _StickPressAction(state) {
+	; if (state.counter<state.millisecs) {
+		; ToolTip("Short Pressed")
+		; Send(state.keydummy)
+	; } else {
+		; ToolTip("Long Pressed")
+		; Send("{" state.keydummy " down}")
+	; }
+; }
+; StickPress(keybind, keydummy, millisecs) {
+	; if (!_StickPressStates.Has(keybind)) {
+		; _StickPressStates[keybind] := { 
+			; keydummy : keydummy,
+			; ms_tick : 1,
+			; millisecs : millisecs
+		; }
+	; }
+	; _ForKeypressTicks(keybind, _StickPressAction, _StickPressStates[keybind])
+; }
+; z::StickPress("z","w",10)
+
+;
+_GetKeypressedKeys := []
+StoreKeypressed(excluded := []) {
+    global _GetKeypressedKeys, _autowalk_key
+    static keys := [
+		"LShift","RShift",
+		"LCtrl","RCtrl",
+		"LAlt","RAlt",
+        "LWin", "RWin",
+        "Up", "Down", "Left", "Right",
+        "Space", "Enter", "Tab",
+        "a","b","c","d","e","f","g","h","i","j",
+        "k","l","m","n","o","p","q","r","s","t",
+        "u","v","w","x","y","z", _autowalk_key
+    ]
+    _GetKeypressedKeys := []
+    for key in keys {
+		if (key = "") {
+			continue 
+		}
+        if GetKeyState(key) {
+			b_is_on_excluded_list := false 
+			for i,v in excluded {
+				if (key == v) {
+					b_is_on_excluded_list := true 
+					break 
+				}
+			}
+			if ( b_is_on_excluded_list ) {
+				continue
+			}
+            _GetKeypressedKeys.Push(key)
+            Send("{" key " up}")   ; release immediately
+        }
+    }
+}
+RestoreKeypressed() {
+    global _GetKeypressedKeys   
+    for key in _GetKeypressedKeys {
+        ; Only re-press if user is STILL physically holding it
+        if GetKeyState(key, "P") {
+            Send("{" key " down}")
+        }
+    }
+    _GetKeypressedKeys := []
+}
+
+; -- Mouse Keybinds 
 
 ScrollDown() {
 	Send("{WheelDown}")
@@ -219,6 +311,7 @@ ScrollUp() {
 }
 
 ; -- Graphical User Interface 
+; works only with windowed or borderless gameplay 
 
 CoordMode("Mouse", "Screen")
 CoordMode("ToolTip", "Screen")
@@ -229,42 +322,33 @@ global radialSelection := ""
 global DEADZONE := 60
 global accDX := 0
 global accDY := 0
+global is_radial_active := false 
 _UpdateRadial(names) {
     global radialCenterX, radialCenterY, accDX, accDY
     global DEADZONE, radialGui, radialSelection
-
     MouseGetPos(&mx, &my)
-
     dxTick := mx - radialCenterX
     dyTick := my - radialCenterY
-
     accDX += dxTick
     accDY += dyTick
-
     ; Clamp accumulation
     accDX := Max(Min(accDX, 200), -200)
     accDY := Max(Min(accDY, 200), -200)
-
     ; Reset mouse back to center
     MouseMove(radialCenterX, radialCenterY, 0)
-
     dx := accDX
     dy := accDY
-
     distance := Sqrt(dx*dx + dy*dy)
-
     if (distance < DEADZONE) {
         radialSelection := ""
         radialGui["DisplayText"].Text := ""
         return
     }
-
     if (Abs(dx) > Abs(dy)) {
         radialSelection := dx > 0 ? "Right" : "Left"
     } else {
         radialSelection := dy > 0 ? "Down" : "Up"
     }
-
 	if (names.Has(radialSelection)) {
 		radialGui["DisplayText"].Text := names[radialSelection]
 	} else {
@@ -272,7 +356,11 @@ _UpdateRadial(names) {
 	}
 }
 RadialMenu4d(key, actions, names) {
-	global radialGui, radialCenterX, radialCenterY, radialSelection, accDX, accDY
+	global radialGui, radialCenterX, radialCenterY, radialSelection, accDX, accDY, is_radial_active 
+	if (is_radial_active) {
+		return 
+	}
+	is_radial_active := true 
 	targetHwnd := WinExist("A")
 	radialSelection := ""
 	accDX := 0
@@ -283,15 +371,15 @@ RadialMenu4d(key, actions, names) {
     radialGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
     radialGui.BackColor := "001a00"
     WinSetTransparent(175, radialGui)
-    radialGui.SetFont("s25 c00ff99", "Consolas")	
-	textHeight := 40
+    radialGui.SetFont("s25 c00ff99", "Consolas")
 	radialGui.AddText(
-		"+Center x0 y" (wh//2 - textHeight//2)
+		"+Center x0 y" (wh//2)
 		" w" ww
-		" h" textHeight
+		" h" 40
 		" vDisplayText",
 		""
 	)
+	StoreKeypressed([key])
     radialGui.Show(
         "x" wx
         " y" wy
@@ -299,19 +387,21 @@ RadialMenu4d(key, actions, names) {
 		" h" wh 
     )
 	f_up := (*)=>_UpdateRadial(names)
-    SetTimer(f_up, 10)
+    SetTimer(f_up, 5)
 	; -- 
 	KeyWait(key)
 	; -- 
     SetTimer(f_up, 0)
 	
+	Sleep(10)
+	
     if radialGui
         radialGui.Destroy()
 		
+	Sleep(10)
+		
 	if (targetHwnd)
 		WinActivate(targetHwnd)	
-	
-	Sleep(10)
 	
 	if (radialSelection != "") {
 		if ( actions.Has(radialSelection) ) {
@@ -319,11 +409,12 @@ RadialMenu4d(key, actions, names) {
 			f_act() 
 		}
 	}
-	
+	RestoreKeypressed()
     radialGui := 0
     radialSelection := ""
 	accDX := 0
 	accDY := 0
+	is_radial_active := false 
 }
 
 DisplayMessage(text, seconds := 2) {
