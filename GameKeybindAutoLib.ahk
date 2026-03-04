@@ -1,28 +1,57 @@
-﻿#Requires AutoHotkey v2.0
+﻿; GameKeybindAutoLib - Autohotkeys Library to Control Input Behaviour for Gameplay 
+; 1. Not every function works on some games, sometimes the alternate version works. 
+; 2. Functions and Variables with preceding underscore are for internal use.
+; 3. Read and modify an example first before testing functions directly from this file.
+; 4. Don't use on multiplayer/competitive games, ahk scripts can be considered cheat.
 
-; Autohotkeys Library to Control Input Behaviour for Gameplay 
-; 1. Not every function works on some games, sometimes the alternate version works 
-; 2. Functions and Variables with preceding underscore are for internal use 
-; 3. Read and modify an example first before testing functions directly from this file 
+#Requires AutoHotkey v2.0
+#include GuiAutoLib.ahk 
 
-_longPressTime := 500  ; milliseconds 
-_is_main_hotkeys_active := true 
+/* Inventory [ GameKeybindAutoLib ] { AHK V2 } 
 
-; Examples - Vanilla AHK
-; Rebind q for w 
-;
-; q::w
-;
-; Control mouse wheel with z and x 
-;
-; z::Send("{WheelUp}")
-; x::Send("{WheelDown}")
+-- Basic Autohotkey Syntax
+1. q::w ; autohotkey syntax to rebind q for w 
+2. q::Function() ; autohotkey syntax to bind Function function with a key press q 
 
-; isGameActive(namePart) - return true if the game window is active
-; 1. Use the name of the process or a substring
-; 2. To be used on #HotIf statement to apply the keybinds only on the target window 
+-- Script Toggle
+1. isGameActive(namePart) - return true if the window with process name has namePart as substring is active
+2. isScriptActive() - use with a keybind to ToggleScript to toggle the script functionality
+3. ToggleScript() - assign a key as a bind to this function to toggle the value returned from isScriptActive
 
+-- Autowalk
+1. Autowalk() - Simple autopress, the triggering key must be different from the autopressing key. 
+
+-- Key/Action Cycle
+1. KeyStateToggle(bind_key) - Toggle between key up and key down states 
+2. ToggleKeys(key, cycled_keys*) - Toggle between binds with same key ex. e::ToggleKeys("e",1,2,3,4,5,6)
+3. GetCurrentKey_ToggleKeys(key, fallback_key) - Try to Get the current key from ToggleKeys 
+4. ActSetCurrentKey_ToggleKeys(key, index, fallback_key) - Sets and Send the key event for the key with corresponding index 
+5. ToggleActions(name, action_1, action_2) - Functional Version of ToggleKeys 
+6. ToggleKeySet, KeySetFilter ; Create a keyset toggle to create toggleable modes for keybinds
+
+-- Quick and Long Press 
+1. LongPress(keybind, normal_press_key, long_press_key) - Assign two keybinds in one, short tap will send one key, a long press will send another.
+2. LAlt_LongPress() - Assign LAlt for short and Alt gr for long press
+3. LongPress_SendInput - Same as LongPress but using SendInput instead of Send. Some games don't recognize Send as keydown event. 
+4. LongPress_Action - Functional version of LongPress with normal_action and longpress_action both functions.
+
+; -- Graphical User Interface 
+1. CardinalMenu(keybind, actions, names) - Radial Menu on Cardinal Directions 
+2. Message(text) - Display Message 
+
+-- 
+1. SendAlt(key) - Some games don't understand the Send(key) command, this command send key down and after  delay sends a key up 
+2. DoubleTap() - Send double tap event, useful to emulate double click.
+3. DoubleTapAlt(key, delay) - Alternate version with delay in milliseconds.
+
+*/
+
+; -- Script Toggle
+_is_main_hotkeys_active := true ; used on isScriptActive 
 isGameActive(namePart) {
+	; 1. Use the namePart as the process or a substring
+	; 2. To be used on #HotIf statement to apply the keybinds only on the target window 
+	; 3. Statement Suggestion: #HotIf ( isScriptActive() && isGameActive(GAMENAME) )
     hwnd := WinActive("A")
     if !hwnd 
         return false 
@@ -30,16 +59,10 @@ isGameActive(namePart) {
     proc := WinGetProcessName(hwnd) 
     return InStr(proc, namePart, true) 
 } 
-
-; isScriptActive - similar to isGameActive, but using a global variable and a toggle function which can be assigned to a key 
-
 isScriptActive() {
 	global _is_main_hotkeys_active 
 	return _is_main_hotkeys_active 
 }
-
-; ToggleScript - toggle the variable returned by isScriptActive 
-
 ToggleScript() {
 	global _is_main_hotkeys_active 
 	_is_main_hotkeys_active := !_is_main_hotkeys_active 
@@ -50,49 +73,20 @@ ToggleScript() {
 	}
 }
 
-; Autowalk - Simple autopress, the triggering key must be different from the autopressing key. 
-; Example to configure q as a autopress w: 
-;
-; q::Autowalk("w") 
-
+; -- Autowalk 
 _autowalk_key := ""
 Autowalk(key) {
+	; 1. Example to configure q as a autopress for w key q::Autowalk("w") 
 	_autowalk_key := key
 	SendInput "{" key " down}"
 }
 
-; DoubleTap - Send double tap event, useful to emulate double click.
-; Example to emulate double click with tab  
-
-; Tab::DoubleTap("LButton")
-
-DoubleTap(key) {
-	Send("{" key "}")
-	Sleep 100 
-	Send("{" key "}")
-}
-
-DoubleTapAlt(key, delay) {
-	Send("{" key "}")
-	Sleep delay 
-	Send("{" key "}")
-}
-
-; SendAlt - Some games don't understand the Send(key) command, this command send key down and after a delay sends a key up 
-
-SendAlt(key, delay) {
-	Send("{" key " down}")
-	Sleep(delay)
-	Send("{" key " up}")
-}
-
-; KeyStateToggle - Toggle between key up and key down states 
-; Example to set run toggle with shift. To this example works p must be the bind assigned to run in the game options, because the key up event will be send whenever shift is pressed, interfering with the logic.
-; 
-; LShift::KeyStateToggle("p") 
-
+; -- Key/Action Cycle
 _KeyStateToggleMap := Map()
 KeyStateToggle(bind_key) {
+	; 1. Example to set run toggle with shift. To this example works p must be the bind assigned to run in the game options, because the key up event will be send whenever shift is pressed, interfering with the logic.
+	; 
+	; LShift::KeyStateToggle("p") 
 	if ( !_KeyStateToggleMap.Has(bind_key) ) {
 		_KeyStateToggleMap[bind_key] := false
 	}
@@ -103,12 +97,6 @@ KeyStateToggle(bind_key) {
 	}
 	_KeyStateToggleMap[bind_key] := !_KeyStateToggleMap[bind_key] 
 }
-
-; ToggleKeys - Toggle between binds with same key 
-; Example Cycling between 3,4,5, the first entry is to store the current index
-
-; PrimaryWeaps := [1,"3","4","5"]
-; g::ToggleKeys(PrimaryWeaps)
 
 _ToggleKeysMap := Map()
 GetCurrentKey_ToggleKeys(key, fallback_key) {
@@ -150,18 +138,9 @@ ToggleKeys(key, cycled_keys*) {
 	Send("{" arr[ arr[1]+1 ] "}")
 }
 
-; ToggleKeysByGetters - Functional Version of ToggleKeys 
-
-ToggleKeysByGetters(state_getter,key1_getter,key2_getter) {
-	if (state_getter() = 1) {
-		Send( "{" key1_getter() "}" )
-	} else {
-		Send( "{" key2_getter() "}" )
-	}
-}
-
 _ToggleActions := Map()
 ToggleActions(name, action_1, action_2) {
+	global _ToggleActions
 	if (! (_ToggleActions.Has(name)) ) {
 		_ToggleActions[name] := true 
 	}
@@ -173,55 +152,6 @@ ToggleActions(name, action_1, action_2) {
 	_ToggleActions[name] := !_ToggleActions[name]
 }
 
-; AssignLongPress - Assign two keybinds in one, short tap will send one key, a long press will send another.
-
-; Example to assign distant keys for long press 
-; q::AssignLongPress("q", "q", "y") 
-
-AssignLongPress(key, normal_key, longpress) {
-	start := A_TickCount 
-    KeyWait key ; wait until released
-    elapsed := A_TickCount - start
-    if (elapsed >= _longPressTime) {
-        Send("{" longpress "}") ; long press action
-    } else {
-        Send("{" normal_key "}") ; normal tap
-    }
-}
-
-; LAlt_LongPress - Assign LAlt for short and Alt gr for long press
-
-LAlt_LongPress() {
-	AssignLongPress("LAlt", "LAlt", "RAlt")
-}
-
-; AssignLongPress_SendInput - Same as AssignLongPress but using SendInput instead of Send. Some games don't recognize Send as keydown event. 
-
-AssignLongPress_SendInput(key, normal_key, longpress) {
-	start := A_TickCount 
-    KeyWait key ; wait until released
-    elapsed := A_TickCount - start
-    if (elapsed >= _longPressTime) {
-        SendInput "{" longpress "}" ; long press action
-    } else {
-        SendInput "{" normal_key "}" ; normal tap
-    }
-}
-
-; AssignLongPress_Action - Functional version of AssignLongPress with normal_action and longpress_action both functions.
-
-AssignLongPress_Action(key, normal_action, longpress_action) {
-	start := A_TickCount 
-    KeyWait key ; wait until released
-    elapsed := A_TickCount - start
-    if (elapsed >= _longPressTime) {
-        longpress_action() 
-    } else {
-        normal_action()
-    }
-}
-
-; ToggleKeySet, KeySetFilter ; Create a keyset toggle to create toggleable modes for keybinds
 _CurrentKeySet := 0
 ToggleKeySet(keyset_1, keyset_2) {
 	global _CurrentKeySet
@@ -241,276 +171,69 @@ KeySetFilter(keyset_1, action_1, args_1, keyset_2, action_2, args_2) {
 	}
 }
 
-; StickPress ; Keep Pressing "keydown" when a key is pressed for enough time
-; _StickPressStates := Map()
-; _StickPressAction(state) {
-	; if (state.counter<state.millisecs) {
-		; ToolTip("Short Pressed")
-		; Send(state.keydummy)
-	; } else {
-		; ToolTip("Long Pressed")
-		; Send("{" state.keydummy " down}")
-	; }
-; }
-; StickPress(keybind, keydummy, millisecs) {
-	; if (!_StickPressStates.Has(keybind)) {
-		; _StickPressStates[keybind] := { 
-			; keydummy : keydummy,
-			; ms_tick : 1,
-			; millisecs : millisecs
-		; }
-	; }
-	; _ForKeypressTicks(keybind, _StickPressAction, _StickPressStates[keybind])
-; }
-; z::StickPress("z","w",10)
-
-;
-_GetKeypressedKeys := []
-StoreKeypressed(excluded := []) {
-    global _GetKeypressedKeys, _autowalk_key
-    static keys := [
-		"LShift","RShift",
-		"LCtrl","RCtrl",
-		"LAlt","RAlt",
-        "LWin", "RWin",
-        "Up", "Down", "Left", "Right",
-        "Space", "Enter", "Tab",
-        "a","b","c","d","e","f","g","h","i","j",
-        "k","l","m","n","o","p","q","r","s","t",
-        "u","v","w","x","y","z", _autowalk_key
-    ]
-    _GetKeypressedKeys := []
-    for key in keys {
-		if (key = "") {
-			continue 
-		}
-        if GetKeyState(key) {
-			b_is_on_excluded_list := false 
-			for i,v in excluded {
-				if (key == v) {
-					b_is_on_excluded_list := true 
-					break 
-				}
-			}
-			if ( b_is_on_excluded_list ) {
-				continue
-			}
-            _GetKeypressedKeys.Push(key)
-            Send("{" key " up}")   ; release immediately
-        }
+; -- Quick and Long Press 
+LongPress(keybind, normal_key, longpress, ms_longpresstime := 500) {
+	; 1. Example to assign distant keys for long press q::LongPress("q", "q", "y") 
+	start := A_TickCount 
+    KeyWait keybind ; wait until released
+    elapsed := A_TickCount - start
+    if (elapsed >= ms_longpresstime) {
+        Send("{" longpress "}") ; long press action
+    } else {
+        Send("{" normal_key "}") ; normal tap
     }
 }
-RestoreKeypressed() {
-	if (!isScriptActive()) {
-		return 
-	}
-    global _GetKeypressedKeys, _autowalk_key
-    for key in _GetKeypressedKeys {
-		if (key = "") {
-			continue 
-		}
-        if ( GetKeyState(key, "P") || key=_autowalk_key ) {
-            Send("{" key " down}")
-        }
+LAlt_LongPress() {
+	LongPress("LAlt", "LAlt", "RAlt")
+}
+LongPress_SendInput(key, normal_key, longpress, ms_longpresstime := 500) {
+	start := A_TickCount 
+    KeyWait key ; wait until released
+    elapsed := A_TickCount - start
+    if (elapsed >= ms_longpresstime) {
+        SendInput "{" longpress "}" ; long press action
+    } else {
+        SendInput "{" normal_key "}" ; normal tap
     }
-    _GetKeypressedKeys := []
 }
-
-; -- Mouse Keybinds 
-
-ScrollDown() {
-	Send("{WheelDown}")
-}
-
-ScrollUp() {
-	Send("{WheelUp}")
+LongPress_Action(key, normal_action, longpress_action, ms_longpresstime := 500) {
+	start := A_TickCount 
+    KeyWait key ; wait until released
+    elapsed := A_TickCount - start
+    if (elapsed >= ms_longpresstime) {
+        longpress_action() 
+    } else {
+        normal_action()
+    }
 }
 
 ; -- Graphical User Interface 
-; works only with windowed or borderless gameplay 
+CardinalMenu := RadialMenu4d 
+Message := DisplayMessage 
 
-CoordMode("Mouse", "Screen")
-CoordMode("ToolTip", "Screen")
-global radialGui := 0
-global radialCenterX := 0
-global radialCenterY := 0
-global radialSelection := ""
-global DEADZONE := 60
-global accDX := 0
-global accDY := 0
-global is_radial_active := false 
-
-_UpdateRadial(names) {
-    global radialCenterX, radialCenterY, accDX, accDY
-    global DEADZONE, radialGui, radialSelection
-    MouseGetPos(&mx, &my)
-    dxTick := mx - radialCenterX
-    dyTick := my - radialCenterY
-    accDX += dxTick
-    accDY += dyTick
-    ; Clamp accumulation
-    accDX := Max(Min(accDX, 200), -200)
-    accDY := Max(Min(accDY, 200), -200)
-    ; Reset mouse back to center
-    MouseMove(radialCenterX, radialCenterY, 0)
-    dx := accDX
-    dy := accDY
-    distance := Sqrt(dx*dx + dy*dy)
-    if (distance < DEADZONE) {
-        radialSelection := ""
-        radialGui["DisplayText"].Text := ""
-        return
-    }
-    if (Abs(dx) > Abs(dy)) {
-        radialSelection := dx > 0 ? "Right" : "Left"
-    } else {
-        radialSelection := dy > 0 ? "Down" : "Up"
-    }
-	if (names.Has(radialSelection)) {
-		radialGui["DisplayText"].Text := names[radialSelection]	
-	} else {
-		radialGui["DisplayText"].Text := radialSelection
-	}
+; -- 
+SendAlt(key, delay) {
+	Send("{" key " down}")
+	Sleep(delay)
+	Send("{" key " up}")
 }
-RadialMenu4d(key, actions, names, default_action := 0 ) {
-	global radialGui, radialCenterX, radialCenterY, radialSelection, accDX, accDY, is_radial_active 
-	if (is_radial_active) {
-		return 
-	}
-	is_radial_active := true 
-	targetHwnd := WinExist("A")
-	radialSelection := ""
-	accDX := 0
-	accDY := 0
-	WinGetPos(&wx, &wy, &ww, &wh, "A")
-	radialCenterX := wx + ww // 2
-	radialCenterY := wy + wh // 2	
-	radialGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20 +E0x80000")
-	radialGui.BackColor := "010101"
-	WinSetTransColor("010101", radialGui)
-	pic := radialGui.Add("Picture", "+0xE", "cardinal.png")
-	_CenterToSize(pic, ww, wh)
-    radialGui.SetFont("s16 c00ff99", "Consolas")
-	text := radialGui.AddText("BackgroundTrans +Center w" ww " vDisplayText","")
-	_CenterToSize(text, ww, wh)
-	StoreKeypressed([key])
-    radialGui.Show(
-        "x" wx
-        " y" wy
-        " w" ww 
-		" h" wh 
-    )
-	f_up := (*)=>_UpdateRadial(names)
-    SetTimer(f_up, 5)
-	; -- 
-	KeyWait(key)
-	; -- 
-    SetTimer(f_up, 0)
-	
-	Sleep(10)
-	
-    if radialGui
-        radialGui.Destroy()
-		
-	Sleep(10)
-		
-	if (targetHwnd)
-		WinActivate(targetHwnd)	
-	
-	if (radialSelection != "") {
-		if ( actions.Has(radialSelection) ) {
-			f_act := actions[radialSelection]
-			f_act() 
-		}
-	} else if ( default_action != 0) {
-		default_action()
-	}
-	RestoreKeypressed()
-    radialGui := 0
-    radialSelection := ""
-	accDX := 0
-	accDY := 0
-	is_radial_active := false 
+DoubleTap(key) {
+	; 1. Example to emulate double click with tab Tab::DoubleTap("LButton")
+	Send("{" key "}")
+	Sleep 100 
+	Send("{" key "}")
 }
-
-DisplayMessage(text, seconds := 2) {
-    static msgGui := 0
-    static fadeTimer := 0
-    static currentAlpha := 0
-
-    ; Destroy previous message if exists
-    if msgGui {
-        if (fadeTimer)
-            SetTimer(fadeTimer, 0)
-        msgGui.Destroy()
-        msgGui := 0
-    }
-
-    ; Create GUI
-    msgGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
-    msgGui.BackColor := "001a00"
-	; msgGui.BackColor := "010101"
-	; WinSetTransColor("010101", msgGui)
-	
-    msgGui.MarginX := 20
-    msgGui.MarginY := 15
-    msgGui.SetFont("s18 c00ff99", "Consolas")
-
-    txt := msgGui.AddText("vMsgText", text)
-
-    ; Show hidden first to calculate real size
-    msgGui.Show("Hide AutoSize")
-
-    ; Get text control size
-    txt.GetPos(&tx, &ty, &tw, &th)
-
-    ; Calculate final window size with margins
-    finalW := tw + (msgGui.MarginX * 2)
-    finalH := th + (msgGui.MarginY * 2)
-
-    ; Center on active window
-    WinGetPos(&wx, &wy, &ww, &wh, "A")
-    x := wx + (ww // 2) - (finalW // 2)
-    y := wy + (wh // 2) - (finalH // 2)
-
-    msgGui.Show("NA x" x " y" y " w" finalW " h" finalH)
-
-    currentAlpha := 175
-    WinSetTransparent(currentAlpha, msgGui)
-
-    ; Wait before fading
-    SetTimer(StartFade, -seconds * 1000)
-
-    StartFade() {
-        fadeTimer := FadeStep
-        SetTimer(fadeTimer, 30)
-    }
-
-    FadeStep() {
-        currentAlpha -= 5
-        if (currentAlpha <= 0) {
-            SetTimer(fadeTimer, 0)
-            msgGui.Destroy()
-            msgGui := 0
-            return
-        }
-        WinSetTransparent(currentAlpha, msgGui)
-    }
+DoubleTapAlt(key, delay) {
+	Send("{" key "}")
+	Sleep delay 
+	Send("{" key "}")
 }
-
-; actions_T := Map(
-	; "Up", (*)=>{},
-	; "Down", (*)=>{},
-	; "Left", (*)=>{},
-	; "Right", (*)=>{}
-; )
-; names_T := Map(
-	; "Up", "Testing Up",
-	; "Down", "Testing Down",
-	; "Left", "Testing Left",
-	; "Right", "Testing Right"
-; )
-; CapsLock::RadialMenu4d("CapsLock", actions_T, names_T)
+ScrollDown() {
+	Send("{WheelDown}")
+}
+ScrollUp() {
+	Send("{WheelUp}")
+}
 
 ; ====================================== INTERNAL ==========================================
 
@@ -518,11 +241,6 @@ _EuclideanDist(x1, y1, x2, y2) {
     dx := x2 - x1
     dy := y2 - y1
     return Sqrt(dx*dx + dy*dy)
-}
-
-_CenterToSize(gui_component, parentW, parentH) {
-    gui_component.GetPos(&x, &y, &w, &h)
-    gui_component.Move((parentW - w)//2, (parentH - h)//2)
 }
 
 /* _ForKeypressTicks(...) - do action sequentially each tick count while key keep pressed as an iteration 
@@ -589,6 +307,29 @@ _ForKeypressTicks(key, action, state) {
 }
 
 ; ====================================== EXPERIMENTAL ======================================
+
+; StickPress ; Keep Pressing "keydown" when a key is pressed for enough time
+; _StickPressStates := Map()
+; _StickPressAction(state) {
+	; if (state.counter<state.millisecs) {
+		; ToolTip("Short Pressed")
+		; Send(state.keydummy)
+	; } else {
+		; ToolTip("Long Pressed")
+		; Send("{" state.keydummy " down}")
+	; }
+; }
+; StickPress(keybind, keydummy, millisecs) {
+	; if (!_StickPressStates.Has(keybind)) {
+		; _StickPressStates[keybind] := { 
+			; keydummy : keydummy,
+			; ms_tick : 1,
+			; millisecs : millisecs
+		; }
+	; }
+	; _ForKeypressTicks(keybind, _StickPressAction, _StickPressStates[keybind])
+; }
+; z::StickPress("z","w",10)
 
 ; }
 
