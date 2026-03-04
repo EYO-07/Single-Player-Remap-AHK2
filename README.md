@@ -20,7 +20,7 @@ Usage:
 #HotIf isGameActive("FarCry")
 ; === your custom keymaps ===
 q::Autowalk("w") ; example for autowalk using q for normal wasd
-e::AssignLongPress("e", "e", "y")
+e::LongPress("e", "e", "y")
 ```
 
 5. Use the functions on GameKeybindAutoLib to write your custom script
