@@ -1,5 +1,4 @@
-﻿
-#Requires AutoHotkey v2.0
+﻿#Requires AutoHotkey v2.0
 
 ; Autohotkeys Library to Control Input Behaviour for Gameplay 
 ; 1. Not every function works on some games, sometimes the alternate version works 
@@ -113,6 +112,7 @@ KeyStateToggle(bind_key) {
 
 _ToggleKeysMap := Map()
 GetCurrentKey_ToggleKeys(key, fallback_key) {
+	global _ToggleKeysMap
 	if ( !_ToggleKeysMap.Has(key) ) {
 		return fallback_key
 	}
@@ -122,7 +122,18 @@ GetCurrentKey_ToggleKeys(key, fallback_key) {
 	}
 	return arr[ arr[1]+1 ]
 }
+ActSetCurrentKey_ToggleKeys(key, index, fallback_key) {
+	global _ToggleKeysMap
+	if ( !_ToggleKeysMap.Has(key) ) {
+		Send("{" fallback_key "}")
+		return 
+	}
+	arr := _ToggleKeysMap[key] 
+	arr[1] := index 
+	Send("{" arr[ index+1 ] "}")
+}
 ToggleKeys(key, cycled_keys*) {
+	global _ToggleKeysMap
 	if ( !_ToggleKeysMap.Has(key) ) {  
 		_ToggleKeysMap[key] := [1]
 		arr := _ToggleKeysMap[key]
@@ -290,10 +301,15 @@ StoreKeypressed(excluded := []) {
     }
 }
 RestoreKeypressed() {
-    global _GetKeypressedKeys   
+	if (!isScriptActive()) {
+		return 
+	}
+    global _GetKeypressedKeys, _autowalk_key
     for key in _GetKeypressedKeys {
-        ; Only re-press if user is STILL physically holding it
-        if GetKeyState(key, "P") {
+		if (key = "") {
+			continue 
+		}
+        if ( GetKeyState(key, "P") || key=_autowalk_key ) {
             Send("{" key " down}")
         }
     }
@@ -323,6 +339,7 @@ global DEADZONE := 60
 global accDX := 0
 global accDY := 0
 global is_radial_active := false 
+
 _UpdateRadial(names) {
     global radialCenterX, radialCenterY, accDX, accDY
     global DEADZONE, radialGui, radialSelection
@@ -350,12 +367,12 @@ _UpdateRadial(names) {
         radialSelection := dy > 0 ? "Down" : "Up"
     }
 	if (names.Has(radialSelection)) {
-		radialGui["DisplayText"].Text := names[radialSelection]
+		radialGui["DisplayText"].Text := names[radialSelection]	
 	} else {
 		radialGui["DisplayText"].Text := radialSelection
 	}
 }
-RadialMenu4d(key, actions, names) {
+RadialMenu4d(key, actions, names, default_action := 0 ) {
 	global radialGui, radialCenterX, radialCenterY, radialSelection, accDX, accDY, is_radial_active 
 	if (is_radial_active) {
 		return 
@@ -367,18 +384,15 @@ RadialMenu4d(key, actions, names) {
 	accDY := 0
 	WinGetPos(&wx, &wy, &ww, &wh, "A")
 	radialCenterX := wx + ww // 2
-	radialCenterY := wy + wh // 2
-    radialGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
-    radialGui.BackColor := "001a00"
-    WinSetTransparent(175, radialGui)
-    radialGui.SetFont("s25 c00ff99", "Consolas")
-	radialGui.AddText(
-		"+Center x0 y" (wh//2)
-		" w" ww
-		" h" 40
-		" vDisplayText",
-		""
-	)
+	radialCenterY := wy + wh // 2	
+	radialGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20 +E0x80000")
+	radialGui.BackColor := "010101"
+	WinSetTransColor("010101", radialGui)
+	pic := radialGui.Add("Picture", "+0xE", "cardinal.png")
+	_CenterToSize(pic, ww, wh)
+    radialGui.SetFont("s16 c00ff99", "Consolas")
+	text := radialGui.AddText("BackgroundTrans +Center w" ww " vDisplayText","")
+	_CenterToSize(text, ww, wh)
 	StoreKeypressed([key])
     radialGui.Show(
         "x" wx
@@ -408,6 +422,8 @@ RadialMenu4d(key, actions, names) {
 			f_act := actions[radialSelection]
 			f_act() 
 		}
+	} else if ( default_action != 0) {
+		default_action()
 	}
 	RestoreKeypressed()
     radialGui := 0
@@ -433,6 +449,9 @@ DisplayMessage(text, seconds := 2) {
     ; Create GUI
     msgGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
     msgGui.BackColor := "001a00"
+	; msgGui.BackColor := "010101"
+	; WinSetTransColor("010101", msgGui)
+	
     msgGui.MarginX := 20
     msgGui.MarginY := 15
     msgGui.SetFont("s18 c00ff99", "Consolas")
@@ -499,6 +518,11 @@ _EuclideanDist(x1, y1, x2, y2) {
     dx := x2 - x1
     dy := y2 - y1
     return Sqrt(dx*dx + dy*dy)
+}
+
+_CenterToSize(gui_component, parentW, parentH) {
+    gui_component.GetPos(&x, &y, &w, &h)
+    gui_component.Move((parentW - w)//2, (parentH - h)//2)
 }
 
 /* _ForKeypressTicks(...) - do action sequentially each tick count while key keep pressed as an iteration 
