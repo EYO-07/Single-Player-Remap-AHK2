@@ -9,7 +9,7 @@ global radialGui := 0
 global radialCenterX := 0
 global radialCenterY := 0
 global radialSelection := ""
-global DEADZONE := 60
+global DEADZONE := 30
 global accDX := 0
 global accDY := 0
 global is_radial_active := false 
@@ -142,7 +142,6 @@ DisplayMessage(text, seconds := 2) {
         fadeTimer := FadeStep
         SetTimer(fadeTimer, 30)
     }
-
     FadeStep() {
         currentAlpha -= 5
         if (currentAlpha <= 0) {
@@ -153,6 +152,32 @@ DisplayMessage(text, seconds := 2) {
         }
         WinSetTransparent(currentAlpha, msgGui)
     }
+}
+
+DisplayImageMessage(img_path, milliseconds := 500) {
+    static msgGui := 0
+	WinGetPos(&wx, &wy, &ww, &wh, "A")
+    ; Destroy previous message if exists
+    if msgGui {
+        msgGui.Destroy()
+        msgGui := 0
+    }
+
+    ; Create GUI
+    msgGui := Gui("+AlwaysOnTop -Caption +ToolWindow +E0x20")
+	msgGui.BackColor := "010101"
+	WinSetTransColor("010101", msgGui)
+    msgGui.MarginX := 20
+    msgGui.MarginY := 15
+	
+	; -- 
+    img := msgGui.Add("Picture","+0xE", img_path)
+	_CenterToSize(img, ww, wh)
+
+    msgGui.Show("NA x" wx " y" wy " w" ww " h" wh)
+	Sleep( milliseconds )
+	msgGui.Destroy()
+	msgGui := 0
 }
 
 ; ====================================== INTERNAL ==========================================

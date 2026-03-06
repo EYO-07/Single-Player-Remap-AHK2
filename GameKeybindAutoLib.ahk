@@ -137,6 +137,10 @@ ToggleKeys(key, cycled_keys*) {
 	}
 	Send("{" arr[ arr[1]+1 ] "}")
 }
+ToggleKeys_VI(key, cycled_keys*) {
+	ToggleKeys(key, cycled_keys*)
+	DisplayImageMessage("exchange.png", 500)
+}
 
 _ToggleActions := Map()
 ToggleActions(name, action_1, action_2) {
@@ -150,6 +154,10 @@ ToggleActions(name, action_1, action_2) {
 		action_2()
 	}
 	_ToggleActions[name] := !_ToggleActions[name]
+}
+ToggleActions_VI(name, action_1, action_2) {
+	ToggleActions(name, action_1, action_2)
+	DisplayImageMessage("exchange.png", 500)
 }
 
 _CurrentKeySet := 0
