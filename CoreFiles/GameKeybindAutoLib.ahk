@@ -19,7 +19,8 @@
 3. ToggleScript() - assign a key as a bind to this function to toggle the value returned from isScriptActive
 
 -- Autowalk
-1. Autowalk() - Simple autopress, the triggering key must be different from the autopressing key. 
+1. Autowalk(keybind) - Simple autopress. The triggering key (the key assigned on script) must be different from the keybind key (the key assigned on game menu) to work. 
+2. KeypressAutowalk(keypressed, keybind, ms_threshould) - Autowalk detected if you press the key long enough. The triggering key (the key assigned on script) must be different from the keybind key (the key assigned on game menu) to work. 
 
 -- Key/Action Cycle
 1. KeyStateToggle(bind_key) - Toggle between key up and key down states 
@@ -243,6 +244,8 @@ LongPress_Action(key, normal_action, longpress_action, ms_longpresstime := 500) 
 ; -- Graphical User Interface 
 CardinalMenu := RadialMenu4d 
 Message := DisplayMessage 
+CenterGameWindow := CenterActiveWindow 
+Borderless := ToggleWindowedBorderless
 
 ; -- 
 SendAlt(key, delay) {
@@ -266,6 +269,11 @@ ScrollDown() {
 }
 ScrollUp() {
 	Send("{WheelUp}")
+}
+CancelKeys(args_cancel_keys*) {
+	for k,v in args_cancel_keys {
+		Send("{" v " up}")
+	}
 }
 
 ; ====================================== INTERNAL ==========================================
