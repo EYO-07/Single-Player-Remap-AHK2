@@ -14,20 +14,6 @@ global accDX := 0
 global accDY := 0
 global is_radial_active := false 
 
-; actions_T := Map(
-	; "Up", (*)=>{},
-	; "Down", (*)=>{},
-	; "Left", (*)=>{},
-	; "Right", (*)=>{}
-; )
-; names_T := Map(
-	; "Up", "Testing Up",
-	; "Down", "Testing Down",
-	; "Left", "Testing Left",
-	; "Right", "Testing Right"
-; )
-; CapsLock::RadialMenu4d("CapsLock", actions_T, names_T)
-
 RadialMenu4d(key, actions, names, default_action := 0 ) {
 	global radialGui, radialCenterX, radialCenterY, radialSelection, accDX, accDY, is_radial_active 
 	if (is_radial_active) {
@@ -222,7 +208,7 @@ _CenterToSize(gui_component, parentW, parentH) {
 
 _GetKeypressedKeys := []
 StoreKeypressed(excluded := []) {
-    global _GetKeypressedKeys, _autowalk_key
+    global _GetKeypressedKeys
     static keys := [
 		"LShift","RShift",
 		"LCtrl","RCtrl",
@@ -232,7 +218,7 @@ StoreKeypressed(excluded := []) {
         "Space", "Enter", "Tab",
         "a","b","c","d","e","f","g","h","i","j",
         "k","l","m","n","o","p","q","r","s","t",
-        "u","v","w","x","y","z", _autowalk_key
+        "u","v","w","x","y","z"
     ]
     _GetKeypressedKeys := []
     for key in keys {
@@ -259,12 +245,12 @@ RestoreKeypressed() {
 	if (!isScriptActive()) {
 		return 
 	}
-    global _GetKeypressedKeys, _autowalk_key
+    global _GetKeypressedKeys
     for key in _GetKeypressedKeys {
 		if (key = "") {
 			continue 
 		}
-        if ( GetKeyState(key, "P") || key=_autowalk_key ) {
+        if ( GetKeyState(key, "P") ) {
             Send("{" key " down}")
         }
     }

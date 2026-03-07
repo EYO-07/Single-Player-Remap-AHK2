@@ -74,11 +74,36 @@ ToggleScript() {
 }
 
 ; -- Autowalk 
-_autowalk_key := ""
 Autowalk(key) {
 	; 1. Example to configure q as a autopress for w key q::Autowalk("w") 
-	_autowalk_key := key
 	SendInput "{" key " down}"
+}
+KeypressAutowalk(keypressed, keybind, ms_threshould := 3000) {
+	Send("{" keybind " down}")
+	start := A_TickCount 
+	while ( GetKeyState(keypressed,"P") ) {
+		Sleep(1)
+	}
+	if (A_TickCount - start < ms_threshould) {
+		Send("{" keybind " up}")
+	} 
+}
+KeypressAutowalk_VI(keypressed, keybind, ms_threshould := 3000) {
+	Send("{" keybind " down}")
+	start := A_TickCount 
+	dt := 0
+	b_displayed := false 
+	while ( GetKeyState(keypressed,"P") ) {
+		Sleep(1)
+		dt := A_TickCount - start
+		if (dt >= ms_threshould && !b_displayed) {
+			DisplayImageMessage("autowalk.png", 2000)
+			b_displayed := true 
+		}
+	}
+	if (dt < ms_threshould) {
+		Send("{" keybind " up}")
+	} 
 }
 
 ; -- Key/Action Cycle
