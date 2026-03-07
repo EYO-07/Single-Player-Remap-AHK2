@@ -5,7 +5,7 @@
 ; 2. Short and Long Presses 
 ; 3. Experimental Simple Radial Menu (up, down, left, right) / Works only in windowed or borderless mode 
 
-#include GameKeybindAutoLib.ahk ; make sure the file "GameKeybindAutoLib.ahk" is in same folder of this script 
+#include GameKeybindAutoLib.ahk ; make sure the file "GameKeybindAutoLib.ahk" and "GuiAutoLib.ahk" is in same folder of this script 
 
 ; -- Script Toggle Key 
 ; use pause to activate or deactivate the hotkeys in-game 
@@ -22,13 +22,13 @@ GetCurrentKnife(){
 	Send("{" GetCurrentKey_ToggleKeys(2, "Numpad1") "}")
 }
 WeaponDetectorToggle() {
-	ToggleActions("Dect2Weap", (*)=>Send("{Numpad4}"), GetCurrentWeapon )
+	ToggleActions_VI("Dect2Weap", (*)=>Send("{Numpad4}"), GetCurrentWeapon )
 }
 WeaponBinocularsToggle() {
-	ToggleActions("Bin2Weap", (*)=>Send("{Numpad5}"), GetCurrentWeapon ) 
+	ToggleActions_VI("Bin2Weap", (*)=>Send("{Numpad5}"), GetCurrentWeapon ) 
 }
 WeaponKnifeToggle() {
-	ToggleActions("Knife2Weap", GetCurrentKnife, GetCurrentWeapon ) 
+	ToggleActions_VI("Knife2Weap", GetCurrentKnife, GetCurrentWeapon ) 
 }
 
 ; ====================================================================================================
@@ -37,7 +37,6 @@ WeaponKnifeToggle() {
 
 ; everything below will only be active with the hot if expression satisfied 
 ; you should do a manual remap for ESDF movement in game options
-
 ; -- Remap of Unusual Keys 
 
 \::LShift ; it's the button right to the shift, some keyboards are different by country, change it if is the case.
@@ -53,30 +52,32 @@ m::RButton
 
 ; -- Autowalk - assign q as freelook in game options, so you can freelook while autowalking 
 
-~q::Autowalk("e")
+~q::Autowalk("h")
+e::KeypressAutowalk_VI("e", "h", 3500)
+~d::CancelKeys("h")
 
 ; -- Tap/Long Press keybinds 
 ; long presses are long than half-second, to activate the long press hold the key for a second and release. 
 ; ... the long press need the release key event to trigger, so keep pressing will not trigger until release.
 
-Tab::AssignLongPress_Action( "Tab", (*)=>DoubleTap("LButton"), (*)=>Send("{Enter}") ) 
+Tab::LongPress_Action( "Tab", (*)=>DoubleTap("LButton"), (*)=>Send("{Enter}") ) 
+
 ; long press to send: u, i, o, p 
-w::AssignLongPress_Action("w", (*)=>SendAlt("w",1), (*)=>Send("u") )
-r::AssignLongPress("r","r","i")
-t::AssignLongPress("t","t","o")
+w::LongPress_Action("w", (*)=>SendAlt("w",1), (*)=>Send("u") )
+r::LongPress("r","r","i")
+t::LongPress("t","t","o")
 ; long press to send: k, l
-c::AssignLongPress("c","c","k")
-v::AssignLongPress("v","v","l")
+c::LongPress("c","c","k")
+v::LongPress("v","v","l")
 ; long press to send: n, m
-x::AssignLongPress("x","x","m")
+x::LongPress("x","x","m")
 ; long press to send alt gr 
 LAlt::LAlt_LongPress() 
 ; recommended to use a, g to lean left and right respectively 
-a::AssignLongPress("a","a","p")
-g::AssignLongPress_Action( "g", (*)=>Send("g"), WeaponBinocularsToggle ) ; long press activate binocule 
+a::LongPress("a","a","p")
+g::LongPress_Action( "g", (*)=>Send("g"), WeaponBinocularsToggle ) ; long press activate binocule 
 
 ; -- Radial Menu for Utility Items 
-
 zActions := Map()
 zNames := Map() 
 zNames["Up"] := "Head Lamp"
@@ -87,7 +88,7 @@ zNames["Left"] := "Binoculars"
 zActions["Left"] := WeaponBinocularsToggle
 zNames["Right"] := "Detector"
 zActions["Right"] := WeaponDetectorToggle
-z::RadialMenu4d("z", zActions, zNames) 
+z::CardinalMenu("z", zActions, zNames) 
 
 ; Weapons Toggle System - remap first 1,2,3,4,5,6,7 keybinds to numpad version on game menu so the togglers don't interfere with npc interaction gui  
 ; Numpad1 - weapon 1
@@ -98,20 +99,25 @@ z::RadialMenu4d("z", zActions, zNames)
 ; Numpad6 - Bolt  
 
 1::Numpad1 ; manual knife selection 
-2::ToggleKeys(2,"Numpad1","Numpad6") ; cycle knife and beads  
+2::ToggleKeys_VI(2,"Numpad1","Numpad6") ; cycle knife and beads  
 
-Actions3 := Map()
-Names3 := Map() 
-Names3["Up"] := "Last Primary"
-Actions3["Up"] := GetCurrentWeapon
-Names3["Down"] := "Secondary Weapon"
-Actions3["Down"] := (*)=>Send("{Numpad1}")
-Names3["Left"] := "Primary Weapon 1"
-Actions3["Left"] := (*)=>ActSetCurrentKey_ToggleKeys(3, 1, "Numpad2") 
-Names3["Right"] := "Primary Weapon 2"
-Actions3["Right"] := (*)=>ActSetCurrentKey_ToggleKeys(3, 2, "Numpad3") 
-3::RadialMenu4d(3, Actions3, Names3, (*)=>ToggleKeys(3,"Numpad2","Numpad3") )
+; Actions3 := Map()
+; Names3 := Map() 
+; Names3["Up"] := "Last Primary"
+; Actions3["Up"] := GetCurrentWeapon
+; Names3["Down"] := "Secondary Weapon"
+; Actions3["Down"] := (*)=>Send("{Numpad1}")
+; Names3["Left"] := "Primary Weapon 1"
+; Actions3["Left"] := (*)=>ActSetCurrentKey_ToggleKeys(3, 1, "Numpad2") 
+; Names3["Right"] := "Primary Weapon 2"
+; Actions3["Right"] := (*)=>ActSetCurrentKey_ToggleKeys(3, 2, "Numpad3") 
+; defaultAction3() {
+	; ToggleKeys(3,"Numpad2","Numpad3")
+	; Autowalk("e")
+; }
+; 3::CardinalMenu(3, Actions3, Names3, defaultAction3 )
 
+3::ToggleKeys_VI(3,"Numpad2","Numpad3")
 4::WeaponDetectorToggle() ; toggle current weapon and detector 
 5::WeaponKnifeToggle() ; toggle current weapon and knife 
 6::Tab ; free button 
@@ -131,10 +137,6 @@ Actions3["Right"] := (*)=>ActSetCurrentKey_ToggleKeys(3, 2, "Numpad3")
 ; . - supressor 
 ; space - fire 
 
-; -- unused/deprecated 
-; z::AssignLongPress("z","z","n")
-; b::AssignLongPress_Action("b", (*)=>SendAlt("b",1), (*)=>Send("p") )
-
 ; Substitute these to your Anomaly/appdata/user.ltx file for quick bind setup
 ; note: I'm using R to aim, SPACE to fire, B to jump. So if you're using mouse keys, you should remap those in-game. 
 /*
@@ -147,13 +149,12 @@ bind jump kB
 bind crouch kV
 bind accel kL
 bind sprint_toggle kLSHIFT
-bind forward kE
+bind forward kH
 bind back kD
 bind lstrafe kS
 bind rstrafe kF
 bind llookout kA
 bind rlookout kG
-bind cam_zoom_in kH
 bind cam_zoom_out kRBRACKET
 bind torch kZ
 bind night_vision kN
@@ -168,13 +169,11 @@ bind wpn_next kO
 bind wpn_fire kSPACE
 bind wpn_zoom kR
 bind wpn_reload kT
-bind wpn_func kK
 bind wpn_firemode_prev k9
 bind wpn_firemode_next kLMENU
 bind pause kPAUSE
 bind drop kJ
 bind use kW
-bind scores kM
 bind screenshot kF12
 bind quit kESCAPE
 bind console kGRAVE
@@ -186,6 +185,8 @@ bind quick_use_3 kF3
 bind quick_use_4 kF4
 bind quick_save kF5
 bind quick_load kF9
+bind custom1 kK
+bind custom2 kM
 bind custom6 kNUMPAD0
 bind custom13 kPERIOD
 bind custom14 kTAB
