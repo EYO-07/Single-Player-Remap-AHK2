@@ -1,10 +1,15 @@
 # Single-Player-Remap-AHK2
 
-Scripts for single player gameplay using autohotkeys version 2
+### Current Features:
+1. Short and Long Press 
+2. Autowalk and Longpress Autowalk 
+3. Cardinal Radial Menu 
+4. Keys Toggles and Keys Cycles 
+5. Key State Toggle (Key Up and Key Down toggle) 
 
-Don't use on multiplayer games, as they can be considered cheat ;D
+Scripts for single player gameplay using autohotkeys version 2, don't use on multiplayer games, as they can be considered cheat ;D
 
-Usage:
+### Usage:
 1. Download and Install Autohotkeys V2 on https://www.autohotkey.com/ 
 2. Download the `CoreFiles` folder
 3. Create a new script `myGameKeyBindScript.ahk` for your game in this folder (you can create an empty text file and rename it changing the extension or use the context-menu option to create an empty script)
@@ -27,4 +32,4 @@ e::LongPress("e", "e", "y")
 6. Double-Click on your script to activate
 7. Start your game and make sure the keymap in game settings is consistent with your script. For instance, you should assign functionality for e and y for the longpress functionality. 
 
-Avoid remapping everything, use the script to assign functionality to keys which you can't achieve in game options interface, for example: longpress input, autowalk, key toggle.  
+Avoid remapping everything, use the script to assign functionality to keys which you can't achieve in game options interface, for example: longpress input, autowalk, key toggle. 
