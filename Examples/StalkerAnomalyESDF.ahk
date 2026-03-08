@@ -12,6 +12,7 @@
 ; read the script carefully, I recommend to set the keymap in windowed mode 
 
 Pause::ToggleScript() 
+ScrollLock::Borderless() 
 
 ; -- Subroutines and Definitions for Weapon Toggle System 
 
@@ -53,7 +54,7 @@ m::RButton
 ; -- Autowalk - assign q as freelook in game options, so you can freelook while autowalking 
 
 ~q::Autowalk("h")
-e::KeypressAutowalk_VI("e", "h", 3500)
+e::KeypressAutowalk_VI("e", "h", 4500)
 ~d::CancelKeys("h")
 
 ; -- Tap/Long Press keybinds 
@@ -88,7 +89,7 @@ zNames["Left"] := "Binoculars"
 zActions["Left"] := WeaponBinocularsToggle
 zNames["Right"] := "Detector"
 zActions["Right"] := WeaponDetectorToggle
-z::CardinalMenu("z", zActions, zNames) 
+$z::CardinalMenu("z", zActions, zNames) 
 
 ; Weapons Toggle System - remap first 1,2,3,4,5,6,7 keybinds to numpad version on game menu so the togglers don't interfere with npc interaction gui  
 ; Numpad1 - weapon 1
