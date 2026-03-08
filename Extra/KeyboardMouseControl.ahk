@@ -1,4 +1,5 @@
 ﻿#Requires AutoHotkey v2.0
+#include GuiAutoLib.ahk 
 
 b_mouse_control_active := true
 
@@ -24,6 +25,8 @@ Numpad8:: {
 	else if move_step = 20 
 		move_step := 5
 }
+
+Numpad9::ToggleWindowedBorderless(false)
 
 ; =========================
 ; Key Down
