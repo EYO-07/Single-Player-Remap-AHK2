@@ -126,7 +126,7 @@ GetWindowFrameSize(hwnd, &fx, &fy) {
 }
 
 _ToggleWindowedBorderlessMap := Map()
-ToggleWindowedBorderless() {
+ToggleWindowedBorderless( b_center := true ) {
     global _ToggleWindowedBorderlessMap
     hwnd := WinGetID("A")
     if !hwnd
@@ -135,7 +135,9 @@ ToggleWindowedBorderless() {
     style   := WinGetStyle(hwnd)
     exstyle := WinGetExStyle(hwnd)
 
-	CenterActiveWindow_HWND(hwnd)
+	if b_center
+		CenterActiveWindow_HWND(hwnd)
+		
     WinGetPos(&wx,&wy,&ww,&wh, hwnd)
     sw := A_ScreenWidth
     sh := A_ScreenHeight
@@ -161,8 +163,6 @@ ToggleWindowedBorderless() {
     }
 	
 	GetWindowFrameSize(hwnd, &fx, &fy)
-
-    ; Remove borders
     newStyle := style
 		& ~0x00C00000 ; WS_CAPTION
 		& ~0x00800000 ; WS_BORDER
@@ -171,12 +171,10 @@ ToggleWindowedBorderless() {
 		& ~0x00020000 ; WS_MINIMIZEBOX
 		& ~0x00010000 ; WS_MAXIMIZEBOX
 	WinSetStyle(newStyle, hwnd)
-	
-	; shrink window to compensate frame removal
 	WinMove(wx, wy, ww - fx, wh - fy, "ahk_id " hwnd)
 	
-    ; Center to screen
-    CenterActiveWindow_HWND(hwnd)
+	if b_center
+		CenterActiveWindow_HWND(hwnd)
 }
 
 ; -- radial menu 
@@ -255,14 +253,12 @@ RadialMenu4d(key, actions, names, default_action := 0 ) {
 	; -- 
     SetTimer(f_up, 0)
 	
-	; Sleep(10)
-	
     if (radialGui) { 
 		radialGui.Destroy() 
 	}
 		
-	; Sleep(10)
-		
+	KeyWait(key)
+	Sleep(10)
 	if (targetHwnd)
 		WinActivate(targetHwnd)	
 	
