@@ -3,7 +3,7 @@
 ### Current Features:
 1. Short and Long Press 
 2. Autowalk and Longpress Autowalk 
-3. Cardinal Radial Menu 
+3. Cardinal Radial Menu (Don't work on fullscreen gameplay, and has some known issues)
 4. Keys Toggles and Keys Cycles 
 5. Key State Toggle (Key Up and Key Down toggle) 
 
