@@ -20,30 +20,42 @@
 
 -- Autowalk
 1. Autowalk(keybind) - Simple autopress. The triggering key (the key assigned on script) must be different from the keybind key (the key assigned on game menu) to work. 
-2. KeypressAutowalk(keypressed, keybind, ms_threshould) - Autowalk detected if you press the key long enough. The triggering key (the key assigned on script) must be different from the keybind key (the key assigned on game menu) to work. 
+2. KeypressAutowalk(keypressed, keybind, ms_threshould) - Autowalk detected if you press the key long enough. The triggering key must be different from the keybind key assigned in the game.
+3. KeypressAutowalk_VI(keypressed, keybind, ms_threshould) - Same as KeypressAutowalk but display an image indicator when the autowalk activates.
 
 -- Key/Action Cycle
-1. KeyStateToggle(bind_key) - Toggle between key up and key down states 
-2. ToggleKeys(key, cycled_keys*) - Toggle between binds with same key ex. e::ToggleKeys("e",1,2,3,4,5,6)
-3. GetCurrentKey_ToggleKeys(key, fallback_key) - Try to Get the current key from ToggleKeys 
-4. ActSetCurrentKey_ToggleKeys(key, index, fallback_key) - Sets and Send the key event for the key with corresponding index 
-5. ToggleActions(name, action_1, action_2) - Functional Version of ToggleKeys 
-6. ToggleKeySet, KeySetFilter ; Create a keyset toggle to create toggleable modes for keybinds
+1. KeyStateToggle(bind_key) - Toggle between key up and key down states.
+2. ToggleKeys(key, cycled_keys*) - Toggle between binds with same key. Example: e::ToggleKeys("e",1,2,3,4,5,6)
+3. ToggleKeys_VI(key, cycled_keys*) - Same as ToggleKeys but display a visual indicator.
+4. GetCurrentKey_ToggleKeys(key, fallback_key) - Return the currently selected key from ToggleKeys.
+5. ActSetCurrentKey_ToggleKeys(key, index, fallback_key) - Set the ToggleKeys index and send the corresponding key.
+6. ToggleActions(name, action_1, action_2) - Functional version of ToggleKeys that alternates between two functions.
+7. ToggleActions_VI(name, action_1, action_2) - Same as ToggleActions but display a visual indicator.
+8. ToggleKeySet(keyset_1, keyset_2) - Toggle between two keybind sets (modes).
+9. KeySetFilter(keyset_1, action_1, args_1, keyset_2, action_2, args_2) - Execute different actions depending on the active keyset.
+10. TripleToggle(keybind, primary1, primary2, secondary) - Toggle between two primary keys with short press and toggle the first cycle with a secondary key with long press.
 
 -- Quick and Long Press 
-1. LongPress(keybind, normal_press_key, long_press_key) - Assign two keybinds in one, short tap will send one key, a long press will send another.
-2. LAlt_LongPress() - Assign LAlt for short and Alt gr for long press
-3. LongPress_SendInput - Same as LongPress but using SendInput instead of Send. Some games don't recognize Send as keydown event. 
-4. LongPress_Action - Functional version of LongPress with normal_action and longpress_action both functions.
+1. LongPress(keybind, normal_press_key, long_press_key) - Assign two keybinds in one. Short tap sends one key, long press sends another. The long press need a key up event (key release) to activate.
+2. LAlt_LongPress() - Assign LAlt for short press and RAlt (AltGr) for long press.
+3. LongPress_SendInput(key, normal_key, longpress, ms_longpresstime) - Same as LongPress but uses SendInput for better compatibility with some games.
+4. LongPress_Action(key, normal_action, longpress_action) - Functional version of LongPress where both actions are functions.
+5. AutoLongpress(keypressed, shortpress, longpress, ms_threshould) - Trigger different key events depending on how long a key is held. The long press will be automatically sent without the need for key release.
+6. AutoLongpress_Action(keypressed, shortaction, longaction, ms_threshould) - Functional version of AutoLongpress using functions instead of keys.
 
-; -- Graphical User Interface 
-1. CardinalMenu(keybind, actions, names) - Radial Menu on Cardinal Directions 
-2. Message(text) - Display Message 
+-- Graphical User Interface 
+1. CardinalMenu(keybind, actions, names) - Radial menu using the four cardinal directions.
+2. Message(text) - Display a message on screen.
+3. CenterGameWindow() - Center the active game window on the screen.
+4. Borderless() - Toggle active window between normal and borderless windowed.
 
--- 
-1. SendAlt(key) - Some games don't understand the Send(key) command, this command send key down and after  delay sends a key up 
-2. DoubleTap() - Send double tap event, useful to emulate double click.
-3. DoubleTapAlt(key, delay) - Alternate version with delay in milliseconds.
+-- Utility Input Helpers
+1. SendAlt(key, delay) - Send key down and after a delay send key up. Useful for games that ignore normal Send.
+2. DoubleTap(key) - Send the same key twice quickly. Useful for double click or dash mechanics.
+3. DoubleTapAlt(key, delay) - Double tap with configurable delay.
+4. ScrollDown() - Send mouse wheel down event.
+5. ScrollUp() - Send mouse wheel up event.
+6. CancelKeys(args_cancel_keys*) - Force release multiple keys by sending key up events.
 
 */
 
@@ -205,6 +217,53 @@ KeySetFilter(keyset_1, action_1, args_1, keyset_2, action_2, args_2) {
 	}
 }
 
+_TripleToggleMap := Map() 
+TripleToggle(keybind, primary1, primary2, secondary) {
+	if ( !_TripleToggleMap.Has(keybind) ) {
+		_TripleToggleMap[keybind] := {
+			last_key : "",
+			last_toggle : 0,
+			first_toggle : 0,
+			second_toggle : 0
+		}
+		TTMK := _TripleToggleMap[keybind]
+		first_toggle() {
+			if ( _TripleToggleMap[keybind].last_toggle = 2) {
+				current := GetCurrentKey_ToggleKeys(keybind, primary1)
+				if ( _TripleToggleMap[keybind].last_key = current ) { 
+					ToggleKeys(keybind, primary1, primary2) 
+				} else {
+					Send("{" GetCurrentKey_ToggleKeys(keybind, primary1) "}")
+				}
+			} else {
+				ToggleKeys(keybind, primary1, primary2) 
+			}
+			_TripleToggleMap[keybind].last_toggle := 1
+			_TripleToggleMap[keybind].last_key := GetCurrentKey_ToggleKeys(keybind, primary1)
+		}
+		second_toggle() {
+			if ( _TripleToggleMap[keybind].last_toggle = 1) {
+				Send("{" secondary "}")
+				_TripleToggleMap[keybind].last_key := secondary
+			} else {
+				current := GetCurrentKey_ToggleKeys(keybind, primary1)
+				if (current = _TripleToggleMap[keybind].last_key) {
+					Send("{" secondary "}")
+					_TripleToggleMap[keybind].last_key := secondary
+				} else {
+					Send("{" current "}")
+					_TripleToggleMap[keybind].last_key := current 
+				}
+			}
+			_TripleToggleMap[keybind].last_toggle := 2
+		}
+		TTMK.first_toggle := first_toggle
+		TTMK.second_toggle := second_toggle 
+	}
+	TTMK := _TripleToggleMap[keybind]
+	AutoLongpress_Action(keybind, TTMK.first_toggle, TTMK.second_toggle)
+}
+
 ; -- Quick and Long Press 
 LongPress(keybind, normal_key, longpress, ms_longpresstime := 500) {
 	; 1. Example to assign distant keys for long press q::LongPress("q", "q", "y") 
@@ -239,6 +298,44 @@ LongPress_Action(key, normal_action, longpress_action, ms_longpresstime := 500) 
     } else {
         normal_action()
     }
+}
+
+_AutoLongpress_isRunning := false 
+AutoLongpress(keypressed, shortpress, longpress, ms_threshould := 500) {
+	global _AutoLongpress_isRunning 
+	if _AutoLongpress_isRunning
+		return 
+	_AutoLongpress_isRunning := true 
+	start := A_TickCount 
+	while ( GetKeyState(keypressed,"P") ) {
+		if (A_TickCount - start > ms_threshould) {
+			Send("{" longpress "}")
+			KeyWait(keypressed)
+			_AutoLongpress_isRunning := false 
+			return 
+		} 
+		Sleep(1)
+	}
+	Send("{" shortpress "}")
+	_AutoLongpress_isRunning := false 
+}
+AutoLongpress_Action(keypressed, shortaction, longaction, ms_threshould := 500) {
+	global _AutoLongpress_isRunning 
+	if _AutoLongpress_isRunning
+		return 
+	_AutoLongpress_isRunning := true 	
+	start := A_TickCount 
+	while ( GetKeyState(keypressed,"P") ) {
+		if (A_TickCount - start > ms_threshould) {
+			longaction()
+			KeyWait(keypressed)
+			_AutoLongpress_isRunning := false 
+			return 
+		} 
+		Sleep(1)
+	}
+	shortaction() 
+	_AutoLongpress_isRunning := false 
 }
 
 ; -- Graphical User Interface 
