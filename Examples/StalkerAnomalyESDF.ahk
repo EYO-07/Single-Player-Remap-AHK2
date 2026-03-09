@@ -54,7 +54,7 @@ m::RButton
 ; -- Autowalk - assign q as freelook in game options, so you can freelook while autowalking 
 
 ~q::Autowalk("h")
-e::KeypressAutowalk_VI("e", "h", 4500)
+e::KeypressAutowalk_VI("e", "h", 5500)
 ~d::CancelKeys("h")
 
 ; -- Tap/Long Press keybinds 
@@ -64,7 +64,7 @@ e::KeypressAutowalk_VI("e", "h", 4500)
 Tab::LongPress_Action( "Tab", (*)=>DoubleTap("LButton"), (*)=>Send("{Enter}") ) 
 
 ; long press to send: u, i, o, p 
-w::LongPress_Action("w", (*)=>SendAlt("w",1), (*)=>Send("u") )
+w::AutoLongpress_Action("w", (*)=>SendAlt("w",1), (*)=>Send("u") )
 r::LongPress("r","r","i")
 t::LongPress("t","t","o")
 ; long press to send: k, l
@@ -118,7 +118,9 @@ $z::CardinalMenu("z", zActions, zNames)
 ; }
 ; 3::CardinalMenu(3, Actions3, Names3, defaultAction3 )
 
-3::ToggleKeys_VI(3,"Numpad2","Numpad3")
+; 3::ToggleKeys_VI(3,"Numpad2","Numpad3")
+3::TripleToggle(3,"Numpad2","Numpad3","Numpad1")
+
 4::WeaponDetectorToggle() ; toggle current weapon and detector 
 5::WeaponKnifeToggle() ; toggle current weapon and knife 
 6::Tab ; free button 
