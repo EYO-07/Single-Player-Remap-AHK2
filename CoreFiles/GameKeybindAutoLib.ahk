@@ -158,6 +158,9 @@ ActSetCurrentKey_ToggleKeys(key, index, fallback_key) {
 	arr[1] := index 
 	Send("{" arr[ index+1 ] "}")
 }
+ActGetCurrentKey_ToggleKeys(key, fallback_key) {
+	Send("{" GetCurrentKey_ToggleKeys(key, fallback_key) "}")
+}
 ToggleKeys(key, cycled_keys*) {
 	global _ToggleKeysMap
 	if ( !_ToggleKeysMap.Has(key) ) {  
@@ -180,18 +183,51 @@ ToggleKeys_VI(key, cycled_keys*) {
 	DisplayImageMessage("exchange.png", 500)
 }
 
-_ToggleActions := Map()
-ToggleActions(name, action_1, action_2) {
-	global _ToggleActions
-	if (! (_ToggleActions.Has(name)) ) {
-		_ToggleActions[name] := true 
+_ToggleActionsMap := Map()
+RegisterToggleActions(name, actions*) {
+	arr := []
+	arr.Push(actions*)
+	if ( arr.Length = 0 ) {
+		return false 
 	}
-	if ( _ToggleActions[name] ) {
-		action_1()
+	_ToggleActionsMap[name] := { current : 0, actions : arr }
+	return true 
+}
+ToggleActions(name, actions*) {
+	global _ToggleActionsMap
+	if ( !_ToggleActionsMap.Has(name) ) {
+		if ( !RegisterToggleActions(name, actions*) ) {
+			return 
+		}
+	}
+	TAMN := _ToggleActionsMap[name]
+	len := TAMN.actions.Length
+	if ( len = 0 ) {
+		return
+	}
+	if ( TAMN.current = len ) {
+		TAMN.current := 1 
 	} else {
-		action_2()
+		TAMN.current := TAMN.current + 1
 	}
-	_ToggleActions[name] := !_ToggleActions[name]
+	action := TAMN.actions[ TAMN.current ]
+	action()
+}
+CurrentToggleActions(name, actions*) {
+	global _ToggleActionsMap
+	if ( !_ToggleActionsMap.Has(name) ) {
+		ToggleActions(name, actions*)
+		return 
+	}
+	TAMN := _ToggleActionsMap[name]
+	len := TAMN.actions.Length
+	if ( len = 0 ) {
+		return
+	}
+	if TAMN.current = 0
+		TAMN.current := 1
+	action := TAMN.actions[ TAMN.current ]
+	action() 
 }
 ToggleActions_VI(name, action_1, action_2) {
 	ToggleActions(name, action_1, action_2)
@@ -219,6 +255,7 @@ KeySetFilter(keyset_1, action_1, args_1, keyset_2, action_2, args_2) {
 
 _TripleToggleMap := Map() 
 TripleToggle(keybind, primary1, primary2, secondary) {
+	global _TripleToggleMap 
 	if ( !_TripleToggleMap.Has(keybind) ) {
 		_TripleToggleMap[keybind] := {
 			last_key : "",
@@ -228,6 +265,7 @@ TripleToggle(keybind, primary1, primary2, secondary) {
 		}
 		TTMK := _TripleToggleMap[keybind]
 		first_toggle() {
+			global _TripleToggleMap 
 			if ( _TripleToggleMap[keybind].last_toggle = 2) {
 				current := GetCurrentKey_ToggleKeys(keybind, primary1)
 				if ( _TripleToggleMap[keybind].last_key = current ) { 
@@ -242,6 +280,7 @@ TripleToggle(keybind, primary1, primary2, secondary) {
 			_TripleToggleMap[keybind].last_key := GetCurrentKey_ToggleKeys(keybind, primary1)
 		}
 		second_toggle() {
+			global _TripleToggleMap 
 			if ( _TripleToggleMap[keybind].last_toggle = 1) {
 				Send("{" secondary "}")
 				_TripleToggleMap[keybind].last_key := secondary
@@ -263,6 +302,74 @@ TripleToggle(keybind, primary1, primary2, secondary) {
 	TTMK := _TripleToggleMap[keybind]
 	AutoLongpress_Action(keybind, TTMK.first_toggle, TTMK.second_toggle)
 }
+TripleToggle_Action(keybind, primary1_action, primary2_action, secondary_action) {
+	global _TripleToggleMap 
+	if ( !_TripleToggleMap.Has(keybind) ) {
+		_TripleToggleMap[keybind] := {
+			last_toggle : 1,
+			first_toggle : 0,
+			second_toggle : 0
+		}
+		TTMK := _TripleToggleMap[keybind]
+		first_toggle() {
+			global _TripleToggleMap 
+			ToggleActions(keybind, primary1_action, primary2_action)
+			_TripleToggleMap[keybind].last_toggle := 1
+		}
+		second_toggle() {
+			global _TripleToggleMap 
+			if ( _TripleToggleMap[keybind].last_toggle = 1 ) { 
+				secondary_action()
+				_TripleToggleMap[keybind].last_toggle := 2
+			} else {
+				; virtually on first toggle 
+				CurrentToggleActions(keybind, primary1_action, primary2_action)
+				_TripleToggleMap[keybind].last_toggle := 1
+			}
+			
+		}
+		TTMK.first_toggle := first_toggle
+		TTMK.second_toggle := second_toggle 
+	}
+	TTMK := _TripleToggleMap[keybind]
+	AutoLongpress_Action(keybind, TTMK.first_toggle, TTMK.second_toggle)
+}
+
+_MatrixActionToggleMap := Map()
+MatrixActionToggle(keypressed, action_toggles_names*){
+	global _MatrixActionToggleMap, _ToggleActionsMap
+	if ( !_MatrixActionToggleMap.Has(keypressed) ){
+		arr := []
+		arr.Push(action_toggles_names*)
+		if (arr.Length = 0) {
+			return 
+		}
+		_MatrixActionToggleMap[keypressed] := { current : 1, toggles_names : arr, toggle : 0 }
+		vertical_toggle() {
+			global _MatrixActionToggleMap
+			MATMN := _MatrixActionToggleMap[keypressed]
+			len := MATMN.toggles_names.Length
+			if ( MATMN.current = len ) {
+				MATMN.current := 1 
+			} else {
+				MATMN.current := MATMN.current + 1
+			}
+			CurrentToggleActions( MATMN.toggles_names[MATMN.current] )
+		}
+		_MatrixActionToggleMap[keypressed].toggle := vertical_toggle
+	}
+	MATMN := _MatrixActionToggleMap[keypressed]
+	current_name := MATMN.toggles_names[ MATMN.current ]
+	AutoLongpress_Action(
+		keypressed, 
+		(*)=>ToggleActions(current_name), 
+		MATMN.toggle 
+	)	
+}
+
+; RegisterToggleActions("line 1", (*)=>ToolTip("11"), (*)=>ToolTip("12"))
+; RegisterToggleActions("line 2", (*)=>ToolTip("21"), (*)=>ToolTip("22"))
+; z::MatrixActionToggle("z", "line 1", "line 2")
 
 ; -- Quick and Long Press 
 LongPress(keybind, normal_key, longpress, ms_longpresstime := 500) {
