@@ -446,7 +446,7 @@ AutoLongpress_Action(keypressed, shortaction, longaction, ms_threshould := 500) 
 }
 
 ; -- Graphical User Interface 
-CardinalMenu := RadialMenu4d 
+CardinalMenu := RadialMenu4d ; don't use backslash
 Message := DisplayMessage 
 CenterGameWindow := CenterActiveWindow 
 Borderless := ToggleWindowedBorderless

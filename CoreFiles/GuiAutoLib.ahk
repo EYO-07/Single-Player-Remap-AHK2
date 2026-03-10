@@ -7,6 +7,15 @@ CoordMode("Mouse", "Screen")
 CoordMode("ToolTip", "Screen")
 
 ; -- utils
+IsValidKey(key) {
+    try {
+        GetKeyState(key)
+        return true
+    } catch {
+        return false
+    }
+}
+
 CenterToSize(gui_component, parentW, parentH) {
     gui_component.GetPos(&x, &y, &w, &h)
     gui_component.Move((parentW - w)//2, (parentH - h)//2)
@@ -219,6 +228,10 @@ _UpdateRadial(names) {
 	}
 }
 RadialMenu4d(key, actions, names, default_action := 0 ) {
+	if ( !IsValidKey(key) ) {
+		MsgBox "Invalid Expression -> " key
+		return 
+	}
 	global radialGui, radialCenterX, radialCenterY, radialSelection, accDX, accDY, is_radial_active 
 	if (is_radial_active) {
 		return 
