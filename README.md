@@ -2,8 +2,8 @@
 
 ### Current Features:
 1. Short and Long Press 
-2. Autowalk and Longpress Autowalk 
-3. Cardinal Radial Menu (Don't work on fullscreen gameplay, and has some known issues)
+2. Autowalk and Long Press Autowalk 
+3. Cardinal Radial Menu (Don't work on fullscreen gameplay)
 4. Keys Toggles and Keys Cycles 
 5. Key State Toggle (Key Up and Key Down toggle) 
 
@@ -40,6 +40,15 @@ e::AutoLongpress("e", "e", "y")
 Avoid remapping everything, use the script to assign functionality to keys which you can't achieve in game options interface, for example: longpress input, autowalk, key toggle. 
 
 ## Snippets
+
+### Forward Autowalk by Long Press
+
+```AutoHotkey
+; assuming h is not binded to anything in-game
+; remap in game options the movements to h forward, and (a,s,d) to (left, backward, right) respectively.
+w::KeypressAutowalk_VI("w", "h", 5500) ; 5.5 seconds
+~s::CancelKeys("h") ; cancel the autowalk with s or pressing w again
+```
 
 ### WASD Autowalk in All Directions
 
