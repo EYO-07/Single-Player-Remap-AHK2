@@ -101,5 +101,15 @@ CapsLock_Actions["Left"] := (*)=>Send(4)
 CapsLock::CardinalMenu("CapsLock", CapsLock_Actions, CapsLock_Names)
 ```
 
+### Smart Toggle using MatrixActionToggle 
+
+```AutoHotkey
+; Assuming 1,2,3 are keybinds for weapons in game menu
+; ... 4,5,6 are keybinds for items in game menu
+RegisterToggleActions("weapons", (*)=>Send(1), (*)=>Send(2), (*)=>Send(3))
+RegisterToggleActions("items", (*)=>Send(4), (*)=>Send(5), (*)=>Send(6))
+CapsLock::MatrixActionToggle("CapsLock", "weapons", "items") ; short press to use the current cycle, long press to change cycles
+```
+
 
 
