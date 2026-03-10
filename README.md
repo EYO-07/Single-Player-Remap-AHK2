@@ -23,6 +23,10 @@ Scripts for single player gameplay using autohotkeys version 2, don't use on mul
 Pause::ToggleScript() ; use keyboard pause to activate or deactivate the hotkeys in-game.
 ScrollLock::Borderless() ; use keyboard scrollock to change between windowed and borderless windowed, the function will center the game window.
 
+; #HotIf ( isGameActive(GAMENAME) && isScriptActive() )  
+; always put this statement before assigning custom binds, this ensure the keybinds is contained in case of game crash
+; Everything below this hotif statements only works with script active 
+; Additionaly you can use isGameActive(GAMENAME) to filter the functionality only for your game 
 ; the function argument for isGameActive should be any substring from the process name of your desired game
 ; for instance if your process name is FarCry.exe you can put "FarCry" as argument
 ; you can inspect the process name in taskmanager on details section or the name of executable
