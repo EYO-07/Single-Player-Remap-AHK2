@@ -54,22 +54,6 @@ w::KeypressAutowalk_VI("w", "h", 5500) ; 5.5 seconds
 ~s::CancelKeys("h") ; cancel the autowalk with s or pressing w again
 ```
 
-### WASD Autowalk in All Directions
-
-```AutoHotkey
-; autowalk in four directions by longpress, if you press long enough it will hold the key until you press again or press the opposite direction.
-; please assign (i,j,k,l) as keybinds for (up,left,down,right) movement directions in game menu.
-delay_ms := 7000 ; 7 seconds to activate the autowalk
-w::KeypressAutowalk_VI("w","i",delay_ms) ; w as forward direction, in-game keybind i
-~s::CancelKeys("i") ; forward autowalk cancelled by s
-s::KeypressAutowalk_VI("s","k",delay_ms) ; s as backward direction. in-game keybind k
-~w::CancelKeys("k") ; backward autowalk cancelled by w
-a::KeypressAutowalk_VI("a","j",delay_ms) ; a as left direction, in-game keybind j
-~d::CancelKeys("j") ; left autowalk cancelled by d
-d::KeypressAutowalk_VI("d","l",delay_ms) ; d as right direction, in-gamge keybind l
-~a::CancelKeys("l") ; right autowalk cancelled by a 
-```
-
 ### Smart Weapon Toggle using TripleToggle function
 
 ```AutoHotkey
