@@ -91,6 +91,17 @@ Autowalk(key) {
 	; 1. Example to configure q as a autopress for w key q::Autowalk("w") 
 	SendInput "{" key " down}"
 }
+; MultiDirAutowalk(keys*) {
+	; pressed_keys := []
+	; for i,v in keys {
+		; if !GetKeyState(v,"P")
+			; continue 
+		; pressed_keys.Push(v)
+	; }
+	; for v in pressed_keys {
+		; SendInput "{" v " down}"
+	; }
+; }
 KeypressAutowalk(keypressed, keybind, ms_threshould := 3000) {
 	Send("{" keybind " down}")
 	start := A_TickCount 
@@ -122,6 +133,7 @@ KeypressAutowalk_VI(keypressed, keybind, ms_threshould := 3000) {
 ; -- Key/Action Cycle
 _KeyStateToggleMap := Map()
 KeyStateToggle(bind_key) {
+	global _KeyStateToggleMap
 	; 1. Example to set run toggle with shift. To this example works p must be the bind assigned to run in the game options, because the key up event will be send whenever shift is pressed, interfering with the logic.
 	; 
 	; LShift::KeyStateToggle("p") 
@@ -242,10 +254,13 @@ ToggleKeySet(keyset_1, keyset_2) {
 	} else {
 		_CurrentKeySet := keyset_2
 	}
-	DisplayMessage(_CurrentKeySet " active", 1)
+	DisplayMessage(_CurrentKeySet, 1)
 }
 KeySetFilter(keyset_1, action_1, args_1, keyset_2, action_2, args_2) {
 	global _CurrentKeySet
+	if ( _CurrentKeySet = 0 ) {
+		_CurrentKeySet := keyset_1
+	}
 	if ( _CurrentKeySet = keyset_1 ) {
 		action_1(args_1*)
 	} else if ( _CurrentKeySet = keyset_2 ) {
@@ -367,10 +382,6 @@ MatrixActionToggle(keypressed, action_toggles_names*){
 	)	
 }
 
-; RegisterToggleActions("line 1", (*)=>ToolTip("11"), (*)=>ToolTip("12"))
-; RegisterToggleActions("line 2", (*)=>ToolTip("21"), (*)=>ToolTip("22"))
-; z::MatrixActionToggle("z", "line 1", "line 2")
-
 ; -- Quick and Long Press 
 LongPress(keybind, normal_key, longpress, ms_longpresstime := 500) {
 	; 1. Example to assign distant keys for long press q::LongPress("q", "q", "y") 
@@ -475,7 +486,11 @@ ScrollUp() {
 	Send("{WheelUp}")
 }
 CancelKeys(args_cancel_keys*) {
+	global _KeyStateToggleMap
 	for k,v in args_cancel_keys {
+		if ( _KeyStateToggleMap.Has(v) ) {
+			_KeyStateToggleMap[v] := false
+		}
 		Send("{" v " up}")
 	}
 }
